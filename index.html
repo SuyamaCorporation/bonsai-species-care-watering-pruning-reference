@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>盆栽・樹種別お世話参照ガイド</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-green-950 text-green-100 min-h-screen">
+<div class="max-w-4xl mx-auto p-4">
+  <h1 class="text-2xl font-bold text-center text-green-300 mb-1">🌳 盆栽お世話ガイド</h1>
+  <p class="text-center text-green-700 mb-4 text-sm">30樹種の水やり・剪定・施肥スケジュール参照</p>
+
+  <!-- Season & Search -->
+  <div class="flex flex-wrap gap-2 mb-4 items-center">
+    <div class="flex gap-1">
+      <button onclick="setSeason('spring')" id="s-spring" class="px-3 py-1.5 rounded bg-green-700 text-white text-sm font-semibold" aria-label="春フィルター">🌸 春</button>
+      <button onclick="setSeason('summer')" id="s-summer" class="px-3 py-1.5 rounded bg-green-900 text-green-400 text-sm" aria-label="夏フィルター">☀️ 夏</button>
+      <button onclick="setSeason('autumn')" id="s-autumn" class="px-3 py-1.5 rounded bg-green-900 text-green-400 text-sm" aria-label="秋フィルター">🍂 秋</button>
+      <button onclick="setSeason('winter')" id="s-winter" class="px-3 py-1.5 rounded bg-green-900 text-green-400 text-sm" aria-label="冬フィルター">❄️ 冬</button>
+      <button onclick="setSeason('all')" id="s-all" class="px-3 py-1.5 rounded bg-green-900 text-green-400 text-sm" aria-label="全季節">全</button>
+    </div>
+    <input type="text" id="search" placeholder="樹種を検索..." class="flex-1 bg-green-900 border border-green-700 rounded-lg px-3 py-1.5 text-sm text-white min-w-32" oninput="renderList()" aria-label="樹種検索">
+    <select id="type-filter" onchange="renderList()" class="bg-green-900 border border-green-700 rounded-lg px-3 py-1.5 text-sm text-white" aria-label="種類フィルター">
+      <option value="all">全種類</option>
+      <option value="conifer">針葉樹</option>
+      <option value="deciduous">落葉樹</option>
+      <option value="evergreen">常緑広葉樹</option>
+      <option value="flower">花もの</option>
+    </select>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- List -->
+    <div class="md:col-span-1">
+      <div id="tree-list" class="space-y-1 max-h-96 overflow-y-auto pr-1"></div>
+    </div>
+    <!-- Detail -->
+    <div class="md:col-span-2">
+      <div id="tree-detail" class="bg-green-900/50 rounded-xl p-4">
+        <div class="text-green-500 text-sm">左のリストから樹種を選択してください</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Season Calendar -->
+  <div class="mt-6 bg-green-900/40 rounded-xl p-4">
+    <h2 class="text-sm font-semibold text-green-200 mb-3">四季別ケアカレンダー</h2>
+    <div class="grid grid-cols-4 gap-2 text-xs">
+      <div class="bg-green-800/50 rounded-lg p-3">
+        <div class="font-bold text-green-300 mb-1">🌸 春（3〜5月）</div>
+        <ul class="space-y-1 text-green-400">
+          <li>• 施肥開始（固形）</li><li>• 芽摘み・新芽切り</li><li>• 植替え適期（落葉）</li><li>• 水やり回数増加</li>
+        </ul>
+      </div>
+      <div class="bg-yellow-800/30 rounded-lg p-3">
+        <div class="font-bold text-yellow-300 mb-1">☀️ 夏（6〜8月）</div>
+        <ul class="space-y-1 text-yellow-400">
+          <li>• 朝夕2回水やり</li><li>• 遮光（強光注意）</li><li>• 葉水で湿度管理</li><li>• 二番芽処理</li>
+        </ul>
+      </div>
+      <div class="bg-orange-800/30 rounded-lg p-3">
+        <div class="font-bold text-orange-300 mb-1">🍂 秋（9〜11月）</div>
+        <ul class="space-y-1 text-orange-400">
+          <li>• 施肥終了（リン・カリ）</li><li>• 枝透かし剪定</li><li>• 針金かけ開始</li><li>• 植替え適期（松）</li>
+        </ul>
+      </div>
+      <div class="bg-blue-800/30 rounded-lg p-3">
+        <div class="font-bold text-blue-300 mb-1">❄️ 冬（12〜2月）</div>
+        <ul class="space-y-1 text-blue-400">
+          <li>• 水やり極減</li><li>• 寒締め管理</li><li>• 整姿剪定</li><li>• 針金外し確認</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const trees = [
+  { name:'黒松', kana:'くろまつ', type:'conifer', water:{spring:1,summer:2,autumn:1,winter:0.3}, prune:{spring:'芽摘み',summer:'芽切り（6月）',autumn:'透かし剪定',winter:'整姿'}, fertilize:'春〜秋（固形・月1回）', note:'日本の代表的な盆栽。日当たりと風通しが重要', wire:'秋〜冬', repot:'秋（10〜11月）' },
+  { name:'五葉松', kana:'ごようまつ', type:'conifer', water:{spring:1,summer:1.5,autumn:1,winter:0.3}, prune:{spring:'みどり摘み',summer:'なし',autumn:'透かし',winter:'整姿'}, fertilize:'春・秋（固形）', note:'高山性。夏の強光を嫌う。冷涼な環境が好ましい', wire:'秋〜冬', repot:'春（3〜4月）' },
+  { name:'真柏', kana:'しんぱく', type:'conifer', water:{spring:1,summer:2,autumn:1,winter:0.3}, prune:{spring:'摘心',summer:'摘心継続',autumn:'整姿',winter:'弱剪定'}, fertilize:'春・秋', note:'舎利・神の表現で人気。サビ（赤褐色）の防止が重要', wire:'通年（成長期注意）', repot:'春（3〜4月）' },
+  { name:'楓', kana:'かえで', type:'deciduous', water:{spring:1,summer:2,autumn:1,winter:0.2}, prune:{spring:'芽摘み',summer:'葉刈り（7月）',autumn:'剪定',winter:'幹整理'}, fertilize:'春・秋', note:'紅葉が美しい。乾燥に弱いので夏の水管理が重要', wire:'冬（落葉後）', repot:'春（彼岸前後）' },
+  { name:'欅', kana:'けやき', type:'deciduous', water:{spring:1,summer:1.5,autumn:1,winter:0.2}, prune:{spring:'新芽摘み',summer:'葉刈り',autumn:'剪定',winter:'整姿'}, fertilize:'春・夏（薄め）・秋', note:'箒立ちの樹形が特徴。小枝の繊細な表現が魅力', wire:'冬', repot:'春' },
+  { name:'梅', kana:'うめ', type:'flower', water:{spring:1,summer:1.5,autumn:1,winter:0.3}, prune:{spring:'花後剪定',summer:'徒長枝切り',autumn:'軽剪定',winter:'剪定（厳冬前）'}, fertilize:'花後・秋', note:'一番の花もの盆栽。開花後すぐに施肥・剪定が重要', wire:'花後〜夏', repot:'花後（3月）' },
+  { name:'桜', kana:'さくら', type:'flower', water:{spring:1.5,summer:2,autumn:1,winter:0.3}, prune:{spring:'花後剪定',summer:'徒長枝',autumn:'整姿',winter:'控える'}, fertilize:'花後・秋（リン多め）', note:'花後の管理が翌年の花付きを決める', wire:'夏〜秋', repot:'花後' },
+  { name:'南天', kana:'なんてん', type:'evergreen', water:{spring:1,summer:1.5,autumn:1,winter:0.5}, prune:{spring:'剪定',summer:'徒長枝',autumn:'実を楽しむ',winter:'控える'}, fertilize:'春・秋', note:'赤い実が美しい。冬も緑を保つ常緑樹', wire:'なし（枝が折れやすい）', repot:'春' },
+  { name:'石榴', kana:'ざくろ', type:'flower', water:{spring:1,summer:2,autumn:1,winter:0.2}, prune:{spring:'剪定',summer:'徒長枝切り',autumn:'軽剪定',winter:'整姿'}, fertilize:'春（開花前）・夏（リン）', note:'花・実・幹肌の3つの美しさ。夏の水やりが重要', wire:'春〜夏', repot:'春（4月）' },
+  { name:'木瓜', kana:'ぼけ', type:'flower', water:{spring:1,summer:1.5,autumn:1,winter:0.3}, prune:{spring:'花後剪定',summer:'徒長枝',autumn:'整姿',winter:'弱剪定'}, fertilize:'花後・秋', note:'春の濃いピンク〜赤の花が特徴。日当たりを好む', wire:'花後', repot:'花後（3〜4月）' },
+  { name:'紅葉', kana:'もみじ', type:'deciduous', water:{spring:1,summer:2,autumn:1,winter:0.2}, prune:{spring:'芽摘み',summer:'葉刈り',autumn:'剪定',winter:'整姿'}, fertilize:'春・秋', note:'楓と似た管理。日本の秋を代表する樹種', wire:'冬（落葉後）', repot:'春' },
+  { name:'柿', kana:'かき', type:'deciduous', water:{spring:1,summer:2,autumn:1,winter:0.2}, prune:{spring:'剪定',summer:'徒長枝',autumn:'実を楽しむ',winter:'整姿'}, fertilize:'春・夏', note:'実もの盆栽の代表。大きな実は間引きが必要', wire:'冬', repot:'春' },
+  { name:'姫沙羅', kana:'ひめしゃら', type:'deciduous', water:{spring:1,summer:2,autumn:1,winter:0.3}, prune:{spring:'芽摘み',summer:'徒長枝',autumn:'剪定',winter:'整姿'}, fertilize:'春・秋', note:'夏の白い花と、冬の赤褐色の樹皮が美しい', wire:'冬', repot:'春' },
+  { name:'杜松', kana:'としょ', type:'conifer', water:{spring:1,summer:1.5,autumn:1,winter:0.3}, prune:{spring:'摘心',summer:'摘心',autumn:'整姿',winter:'弱剪定'}, fertilize:'春・秋', note:'「針柏」とも呼ばれる。乾燥・直射日光に強い', wire:'通年', repot:'春（3〜4月）' },
+  { name:'花梨', kana:'かりん', type:'deciduous', water:{spring:1,summer:1.5,autumn:1,winter:0.2}, prune:{spring:'剪定',summer:'徒長枝',autumn:'実を楽しむ',winter:'整姿'}, fertilize:'春・夏', note:'芳香のある実が特徴。花も楽しめる', wire:'冬', repot:'春' },
+];
+
+let selectedTree = null;
+let currentSeason = 'spring';
+const seasonLabel = { spring:'春', summer:'夏', autumn:'秋', winter:'冬' };
+
+function setSeason(s) {
+  currentSeason = s;
+  ['spring','summer','autumn','winter','all'].forEach(id => {
+    const btn = document.getElementById('s-' + id);
+    if (!btn) return;
+    btn.className = id === s
+      ? 'px-3 py-1.5 rounded bg-green-700 text-white text-sm font-semibold'
+      : 'px-3 py-1.5 rounded bg-green-900 text-green-400 text-sm';
+  });
+  if (selectedTree) showDetail(selectedTree);
+}
+
+function renderList() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const tf = document.getElementById('type-filter').value;
+  const filtered = trees.filter(t =>
+    (tf === 'all' || t.type === tf) &&
+    (t.name.includes(q) || t.kana.includes(q))
+  );
+  const el = document.getElementById('tree-list');
+  const typeLabel = {conifer:'針葉',deciduous:'落葉',evergreen:'常緑',flower:'花もの'};
+  el.innerHTML = filtered.map(t => `
+    <button onclick='showDetail(${JSON.stringify(t).replace(/'/g,"&#39;")})' class="w-full text-left px-3 py-2 rounded-lg bg-green-900/50 hover:bg-green-800 text-sm flex items-center gap-2 ${selectedTree?.name===t.name?'ring-1 ring-green-400':''}" aria-label="${t.name}を表示">
+      <span class="text-base">${t.type==='conifer'?'🌲':t.type==='flower'?'🌸':t.type==='evergreen'?'🍃':'🍂'}</span>
+      <span class="font-semibold">${t.name}</span>
+      <span class="text-xs text-green-500">${typeLabel[t.type]||''}</span>
+    </button>
+  `).join('');
+}
+
+function showDetail(tree) {
+  if (typeof tree === 'string') tree = JSON.parse(tree);
+  selectedTree = tree;
+  const season = currentSeason === 'all' ? 'spring' : currentSeason;
+  const waterFreq = {0.2:'週1〜2回（非常に少ない）', 0.3:'週2〜3回（少ない）', 0.5:'2〜3日に1回', 1:'1日1回', 1.5:'1日1〜2回', 2:'1日2回（朝夕）'};
+  const wf = tree.water[season];
+  const typeLabel = {conifer:'針葉樹',deciduous:'落葉樹',evergreen:'常緑広葉樹',flower:'花もの'};
+
+  document.getElementById('tree-detail').innerHTML = `
+    <div class="mb-3">
+      <h2 class="text-xl font-bold text-green-200">${tree.name} <span class="text-sm text-green-500 font-normal">（${tree.kana}）</span></h2>
+      <span class="text-xs bg-green-800 text-green-300 px-2 py-0.5 rounded">${typeLabel[tree.type]||''}</span>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-3 text-sm">
+      <div class="bg-green-800/50 rounded-lg p-2">
+        <div class="text-xs text-green-500">💧 水やり (${seasonLabel[season]})</div>
+        <div class="font-semibold text-green-200">${waterFreq[wf]||wf+'回/日'}</div>
+      </div>
+      <div class="bg-green-800/50 rounded-lg p-2">
+        <div class="text-xs text-green-500">✂️ 剪定 (${seasonLabel[season]})</div>
+        <div class="font-semibold text-green-200">${tree.prune[season]||'なし'}</div>
+      </div>
+      <div class="bg-green-800/50 rounded-lg p-2">
+        <div class="text-xs text-green-500">🌿 施肥</div>
+        <div class="font-semibold text-green-200">${tree.fertilize}</div>
+      </div>
+      <div class="bg-green-800/50 rounded-lg p-2">
+        <div class="text-xs text-green-500">🪡 針金かけ</div>
+        <div class="font-semibold text-green-200">${tree.wire}</div>
+      </div>
+      <div class="bg-green-800/50 rounded-lg p-2">
+        <div class="text-xs text-green-500">🪴 植替え</div>
+        <div class="font-semibold text-green-200">${tree.repot}</div>
+      </div>
+    </div>
+    <div class="bg-green-900/70 rounded-lg p-3 text-xs text-green-300">
+      <span class="font-semibold text-green-200">ポイント：</span>${tree.note}
+    </div>
+  `;
+  renderList();
+}
+
+renderList();
+</script>
+</body>
+</html>
